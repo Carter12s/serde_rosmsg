@@ -8,3 +8,4 @@ mod pose;
 mod pose_with_covariance;
 mod pose_array;
 mod nav_sat_fix;
+mod sensor_msgs_image;
