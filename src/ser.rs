@@ -7,9 +7,9 @@
 //! * `char`, so use one character `String`s instead
 //! * Maps that can't be boiled down to `<String, String>`
 
+use super::error::{Error, ErrorKind, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
 use serde::ser::{self, Impossible};
-use super::error::{Error, ErrorKind, Result};
 use std::io;
 
 /// A structure for serializing Rust values into ROSMSG binary data.
@@ -23,7 +23,8 @@ pub struct Serializer<W> {
 }
 
 impl<W> Serializer<W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     /// Creates a new ROSMSG serializer.
     ///
@@ -87,13 +88,16 @@ macro_rules! impl_nums {
     ($ty:ty, $ser_method:ident, $writer_method:ident) => {
         #[inline]
         fn $ser_method(self, v: $ty) -> SerializerResult {
-            self.writer.$writer_method::<LittleEndian>(v).map_err(|v| v.into())
+            self.writer
+                .$writer_method::<LittleEndian>(v)
+                .map_err(|v| v.into())
         }
-    }
+    };
 }
 
 impl<'a, W> ser::Serializer for &'a mut Serializer<W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
@@ -130,7 +134,6 @@ impl<'a, W> ser::Serializer for &'a mut Serializer<W>
     impl_nums!(i64, serialize_i64, write_i64);
     impl_nums!(f32, serialize_f32, write_f32);
     impl_nums!(f64, serialize_f64, write_f64);
-
 
     #[inline]
     fn serialize_char(self, _v: char) -> SerializerResult {
@@ -170,29 +173,32 @@ impl<'a, W> ser::Serializer for &'a mut Serializer<W>
     }
 
     #[inline]
-    fn serialize_unit_variant(self,
-                              _name: &'static str,
-                              _variant_index: u32,
-                              _variant: &'static str)
-                              -> SerializerResult {
+    fn serialize_unit_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+    ) -> SerializerResult {
         bail!(ErrorKind::UnsupportedEnumType)
     }
 
     #[inline]
-    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(self,
-                                                            _name: &'static str,
-                                                            value: &T)
-                                                            -> SerializerResult {
+    fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(
+        self,
+        _name: &'static str,
+        value: &T,
+    ) -> SerializerResult {
         value.serialize(self)
     }
 
     #[inline]
-    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>(self,
-                                                             _name: &'static str,
-                                                             _variant_index: u32,
-                                                             _variant: &'static str,
-                                                             _value: &T)
-                                                             -> SerializerResult {
+    fn serialize_newtype_variant<T: ?Sized + ser::Serialize>(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _value: &T,
+    ) -> SerializerResult {
         bail!(ErrorKind::UnsupportedEnumType)
     }
 
@@ -211,20 +217,22 @@ impl<'a, W> ser::Serializer for &'a mut Serializer<W>
     }
 
     #[inline]
-    fn serialize_tuple_struct(self,
-                              _name: &'static str,
-                              len: usize)
-                              -> Result<Self::SerializeTupleStruct> {
+    fn serialize_tuple_struct(
+        self,
+        _name: &'static str,
+        len: usize,
+    ) -> Result<Self::SerializeTupleStruct> {
         self.serialize_tuple(len)
     }
 
     #[inline]
-    fn serialize_tuple_variant(self,
-                               _name: &'static str,
-                               _variant_index: u32,
-                               _variant: &'static str,
-                               _len: usize)
-                               -> Result<Self::SerializeTupleVariant> {
+    fn serialize_tuple_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeTupleVariant> {
         bail!(ErrorKind::UnsupportedEnumType)
     }
 
@@ -239,12 +247,13 @@ impl<'a, W> ser::Serializer for &'a mut Serializer<W>
     }
 
     #[inline]
-    fn serialize_struct_variant(self,
-                                _name: &'static str,
-                                _variant_index: u32,
-                                _variant: &'static str,
-                                _len: usize)
-                                -> Result<Self::SerializeStructVariant> {
+    fn serialize_struct_variant(
+        self,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeStructVariant> {
         bail!(ErrorKind::UnsupportedEnumType)
     }
 }
@@ -262,14 +271,16 @@ impl<'a, W> Compound<'a, W> {
 }
 
 impl<'a, W> ser::SerializeSeq for Compound<'a, W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
 
     #[inline]
     fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         value.serialize(&mut *self.ser)
     }
@@ -281,14 +292,16 @@ impl<'a, W> ser::SerializeSeq for Compound<'a, W>
 }
 
 impl<'a, W> ser::SerializeTuple for Compound<'a, W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
 
     #[inline]
     fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         value.serialize(&mut *self.ser)
     }
@@ -300,14 +313,16 @@ impl<'a, W> ser::SerializeTuple for Compound<'a, W>
 }
 
 impl<'a, W> ser::SerializeTupleStruct for Compound<'a, W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
 
     #[inline]
     fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         value.serialize(&mut *self.ser)
     }
@@ -319,14 +334,16 @@ impl<'a, W> ser::SerializeTupleStruct for Compound<'a, W>
 }
 
 impl<'a, W> ser::SerializeStruct for Compound<'a, W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
 
     #[inline]
     fn serialize_field<T: ?Sized>(&mut self, _key: &'static str, value: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         value.serialize(&mut *self.ser)
     }
@@ -354,14 +371,16 @@ impl<'a, W> CompoundMap<'a, W> {
 }
 
 impl<'a, W> ser::SerializeMap for CompoundMap<'a, W>
-    where W: io::Write
+where
+    W: io::Write,
 {
     type Ok = ();
     type Error = Error;
 
     #[inline]
     fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         self.item = Vec::<u8>::new();
         let mut buffer = Vec::<u8>::new();
@@ -373,7 +392,8 @@ impl<'a, W> ser::SerializeMap for CompoundMap<'a, W>
 
     #[inline]
     fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<()>
-        where T: ser::Serialize
+    where
+        T: ser::Serialize,
     {
         use serde::Serializer as SerializerTrait;
         let mut buffer = Vec::<u8>::new();
@@ -412,8 +432,9 @@ impl ser::Error for Error {
 /// assert_eq!(cursor.into_inner(), b"\x11\0\0\0\x0d\0\0\0Hello, World!");
 /// ```
 pub fn to_writer<W, T>(writer: &mut W, value: &T) -> Result<()>
-    where W: io::Write,
-          T: ser::Serialize
+where
+    W: io::Write,
+    T: ser::Serialize,
 {
     let mut buffer = Vec::new();
     value.serialize(&mut Serializer::new(&mut buffer))?;
@@ -436,7 +457,8 @@ pub fn to_writer<W, T>(writer: &mut W, value: &T) -> Result<()>
 /// assert_eq!(data, b"\x11\0\0\0\x0d\0\0\0Hello, World!");
 /// ```
 pub fn to_vec<T>(value: &T) -> Result<Vec<u8>>
-    where T: ser::Serialize
+where
+    T: ser::Serialize,
 {
     let mut writer = Vec::with_capacity(128);
     to_writer(&mut writer, value)?;
@@ -460,14 +482,18 @@ mod tests {
 
     #[test]
     fn writes_u32() {
-        assert_eq!(vec![4, 0, 0, 0, 0x45, 0x23, 1, 0xCD],
-                   to_vec(&0xCD012345u32).unwrap());
+        assert_eq!(
+            vec![4, 0, 0, 0, 0x45, 0x23, 1, 0xCD],
+            to_vec(&0xCD012345u32).unwrap()
+        );
     }
 
     #[test]
     fn writes_u64() {
-        assert_eq!(vec![8, 0, 0, 0, 0xBB, 0xAA, 0x10, 0x32, 0x54, 0x76, 0x98, 0xAB],
-                   to_vec(&0xAB9876543210AABBu64).unwrap());
+        assert_eq!(
+            vec![8, 0, 0, 0, 0xBB, 0xAA, 0x10, 0x32, 0x54, 0x76, 0x98, 0xAB],
+            to_vec(&0xAB9876543210AABBu64).unwrap()
+        );
     }
 
     #[test]
@@ -482,26 +508,34 @@ mod tests {
 
     #[test]
     fn writes_i32() {
-        assert_eq!(vec![4, 0, 0, 0, 0x00, 0x6C, 0xCA, 0x88],
-                   to_vec(&-2000000000i32).unwrap());
+        assert_eq!(
+            vec![4, 0, 0, 0, 0x00, 0x6C, 0xCA, 0x88],
+            to_vec(&-2000000000i32).unwrap()
+        );
     }
 
     #[test]
     fn writes_i64() {
-        assert_eq!(vec![8, 0, 0, 0, 0x00, 0x00, 0x7c, 0x1d, 0xaf, 0x93, 0x19, 0x83],
-                   to_vec(&-9000000000000000000i64).unwrap());
+        assert_eq!(
+            vec![8, 0, 0, 0, 0x00, 0x00, 0x7c, 0x1d, 0xaf, 0x93, 0x19, 0x83],
+            to_vec(&-9000000000000000000i64).unwrap()
+        );
     }
 
     #[test]
     fn writes_f32() {
-        assert_eq!(vec![4, 0, 0, 0, 0x00, 0x70, 0x7b, 0x44],
-                   to_vec(&1005.75f32).unwrap());
+        assert_eq!(
+            vec![4, 0, 0, 0, 0x00, 0x70, 0x7b, 0x44],
+            to_vec(&1005.75f32).unwrap()
+        );
     }
 
     #[test]
     fn writes_f64() {
-        assert_eq!(vec![8, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0x8f, 0x40],
-                   to_vec(&1005.75f64).unwrap());
+        assert_eq!(
+            vec![8, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0x8f, 0x40],
+            to_vec(&1005.75f64).unwrap()
+        );
     }
 
     #[test]
@@ -513,29 +547,39 @@ mod tests {
     #[test]
     fn writes_string() {
         assert_eq!(vec![4, 0, 0, 0, 0, 0, 0, 0], to_vec(&"").unwrap());
-        assert_eq!(vec![17, 0, 0, 0, 13, 0, 0, 0, 72, 101, 108, 108, 111, 44, 32, 87, 111, 114,
-                        108, 100, 33],
-                   to_vec(&"Hello, World!").unwrap());
+        assert_eq!(
+            vec![
+                17, 0, 0, 0, 13, 0, 0, 0, 72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100,
+                33
+            ],
+            to_vec(&"Hello, World!").unwrap()
+        );
     }
 
     #[test]
     fn writes_array() {
-        assert_eq!(vec![8, 0, 0, 0, 7, 0, 1, 4, 33, 0, 57, 0],
-                   to_vec(&[7i16, 1025, 33, 57]).unwrap());
+        assert_eq!(
+            vec![8, 0, 0, 0, 7, 0, 1, 4, 33, 0, 57, 0],
+            to_vec(&[7i16, 1025, 33, 57]).unwrap()
+        );
     }
 
     #[test]
     fn writes_vector() {
-        assert_eq!(vec![12, 0, 0, 0, 4, 0, 0, 0, 7, 0, 1, 4, 33, 0, 57, 0],
-                   to_vec(&vec![7i16, 1025, 33, 57]).unwrap());
+        assert_eq!(
+            vec![12, 0, 0, 0, 4, 0, 0, 0, 7, 0, 1, 4, 33, 0, 57, 0],
+            to_vec(&vec![7i16, 1025, 33, 57]).unwrap()
+        );
     }
 
     #[test]
     fn writes_tuple() {
-        assert_eq!(vec![22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0,
-                        1, 0, 0, 1],
-                   to_vec(&(2050i16, true, 7u8, "ABC012", vec![true, false, false, true]))
-                       .unwrap());
+        assert_eq!(
+            vec![
+                22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1
+            ],
+            to_vec(&(2050i16, true, 7u8, "ABC012", vec![true, false, false, true])).unwrap()
+        );
     }
 
     #[derive(Serialize)]
@@ -556,9 +600,12 @@ mod tests {
             d: String::from("ABC012"),
             e: vec![true, false, false, true],
         };
-        assert_eq!(vec![22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0,
-                        1, 0, 0, 1],
-                   to_vec(&v).unwrap());
+        assert_eq!(
+            vec![
+                22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1
+            ],
+            to_vec(&v).unwrap()
+        );
     }
 
     #[derive(Serialize)]
@@ -577,24 +624,28 @@ mod tests {
     fn writes_complex_struct() {
         let mut parts = Vec::new();
         parts.push(TestStructPart {
-                       a: String::from("ABC"),
-                       b: true,
-                   });
+            a: String::from("ABC"),
+            b: true,
+        });
         parts.push(TestStructPart {
-                       a: String::from("1!!!!"),
-                       b: true,
-                   });
+            a: String::from("1!!!!"),
+            b: true,
+        });
         parts.push(TestStructPart {
-                       a: String::from("234b"),
-                       b: false,
-                   });
+            a: String::from("234b"),
+            b: false,
+        });
         let v = TestStructBig {
             a: parts,
             b: String::from("EEe"),
         };
-        assert_eq!(vec![38, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 65, 66, 67, 1, 5, 0, 0, 0, 49, 33,
-                        33, 33, 33, 1, 4, 0, 0, 0, 50, 51, 52, 98, 0, 3, 0, 0, 0, 69, 69, 101],
-                   to_vec(&v).unwrap());
+        assert_eq!(
+            vec![
+                38, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 65, 66, 67, 1, 5, 0, 0, 0, 49, 33, 33, 33, 33,
+                1, 4, 0, 0, 0, 50, 51, 52, 98, 0, 3, 0, 0, 0, 69, 69, 101
+            ],
+            to_vec(&v).unwrap()
+        );
     }
 
     #[test]
@@ -607,8 +658,10 @@ mod tests {
     fn writes_single_item_string_string_map() {
         let mut data = HashMap::<String, String>::new();
         data.insert(String::from("abc"), String::from("123"));
-        assert_eq!(vec![11, 0, 0, 0, 7, 0, 0, 0, 97, 98, 99, 61, 49, 50, 51],
-                   to_vec(&data).unwrap());
+        assert_eq!(
+            vec![11, 0, 0, 0, 7, 0, 0, 0, 97, 98, 99, 61, 49, 50, 51],
+            to_vec(&data).unwrap()
+        );
     }
 
     #[test]
@@ -617,9 +670,15 @@ mod tests {
         data.insert(String::from("abc"), String::from("123"));
         data.insert(String::from("AAA"), String::from("B0"));
         let answer = to_vec(&data).unwrap();
-        assert!(vec![21, 0, 0, 0, 7, 0, 0, 0, 97, 98, 99, 61, 49, 50, 51, 6, 0, 0, 0, 65,
-                     65, 65, 61, 66, 48] == answer ||
-                vec![21, 0, 0, 0, 6, 0, 0, 0, 65, 65, 65, 61, 66, 48, 7, 0, 0, 0, 97, 98, 99,
-                     61, 49, 50, 51] == answer);
+        assert!(
+            vec![
+                21, 0, 0, 0, 7, 0, 0, 0, 97, 98, 99, 61, 49, 50, 51, 6, 0, 0, 0, 65, 65, 65, 61,
+                66, 48
+            ] == answer
+                || vec![
+                    21, 0, 0, 0, 6, 0, 0, 0, 65, 65, 65, 61, 66, 48, 7, 0, 0, 0, 97, 98, 99, 61,
+                    49, 50, 51
+                ] == answer
+        );
     }
 }

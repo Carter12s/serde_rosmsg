@@ -70,13 +70,13 @@ extern crate serde_derive;
 extern crate serde;
 
 #[doc(inline)]
-pub use self::ser::*;
-#[doc(inline)]
 pub use self::de::*;
 #[doc(inline)]
 pub use self::error::Error;
+#[doc(inline)]
+pub use self::ser::*;
 
-pub mod ser;
+mod datatests;
 pub mod de;
 pub mod error;
-mod datatests;
+pub mod ser;

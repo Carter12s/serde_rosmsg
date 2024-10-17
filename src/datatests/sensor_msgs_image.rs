@@ -74,5 +74,4 @@ mod tests {
         let _msg: SharedImage = from_slice(bytes).unwrap();
         // let _msg: RefImage = from_slice(bytes).unwrap();
     }
-
 }
