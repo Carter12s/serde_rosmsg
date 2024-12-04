@@ -631,6 +631,24 @@ mod tests {
         );
     }
 
+    #[test]
+    fn writes_simple_struct_no_length() {
+        let v = TestStructOne {
+            a: 2050i16,
+            b: true,
+            c: 7u8,
+            d: String::from("ABC012"),
+            e: vec![true, false, false, true],
+        };
+        assert_eq!(
+            vec![
+                //22, 0, 0, 0,
+                2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1
+            ],
+            to_vec_skip_length(&v).unwrap()
+        );
+    }
+
     #[derive(Serialize)]
     struct TestStructPart {
         a: String,

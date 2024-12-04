@@ -606,7 +606,6 @@ where
     from_reader_known_length(io::Cursor::new(bytes), length)
 }
 
-
 /// Deserialize an instance of type `T` from a string of ROSMSG data.
 ///
 /// This conversion can fail if the passed stream of bytes does not match the
@@ -802,6 +801,25 @@ mod tests {
             22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1,
         ];
         assert_eq!(v, from_slice(&data).unwrap());
+    }
+
+    #[test]
+    fn reads_simple_struct_no_length() {
+        let v = TestStructOne {
+            a: 2050i16,
+            b: true,
+            c: 7u8,
+            d: String::from("ABC012"),
+            e: vec![true, false, false, true],
+        };
+        let data = vec![
+            //22, 0, 0, 0,
+            2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1,
+        ];
+        assert_eq!(
+            v,
+            from_slice_known_length(&data, data.len() as u32).unwrap()
+        );
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
