@@ -1,22 +1,32 @@
 [package]
-authors = ["Adnan Ademovic <adnanademovic100@gmail.com>"]
+authors = ["Adnan Ademovic <adnanademovic100@gmail.com>", "Carter Schultz <carterjschultz@gmail.com>"]
 categories = ["encoding"]
 description = "A rosmsg serialization file format"
-documentation = "https://docs.rs/serde_rosmsg/0.2.0/serde_rosmsg"
+documentation = "https://docs.rs/roslibrust_serde_rosmsg/latest/roslibrust_serde_rosmsg"
 keywords = ["ros", "rosmsg", "serde", "serialization"]
 license = "MIT"
-name = "serde_rosmsg"
+name = "roslibrust_serde_rosmsg"
 readme = "README.md"
 repository = "https://github.com/adnanademovic/serde_rosmsg"
-version = "0.2.0"
-
-[badges]
-
-[badges.travis-ci]
-repository = "adnanademovic/serde_rosmsg"
+version = "0.3.0"
+edition = "2021"
 
 [dependencies]
 byteorder = "1.0.0"
-error-chain = "0.10.0"
-serde = "1.0.2"
-serde_derive = "1.0.2"
+error-chain = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+# Used as benchmarking framework
+# Run with `cargo bench --bench image_bench`
+criterion = { version = "0.5", features = ["html_reports"] }
+# Used to generate flamegraphs for profiling
+# Run with `cargo bench --bench image_bench -- --profile-time 5`
+# Files will be in target/criterion/<bench_name>/profile/flamegraph.svg
+pprof = { version = "0.13", features = ["criterion", "flamegraph"] }
+# Optimization demonstrated in benchmarks
+serde_bytes = "0.11"
+
+[[bench]]
+name = "image_bench"
+harness = false
