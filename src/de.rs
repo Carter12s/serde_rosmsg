@@ -556,6 +556,21 @@ where
     Ok(value)
 }
 
+/// Variant of [from_reader] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_reader_known_length<'de, R, T>(reader: R, length: u32) -> Result<T>
+where
+    R: io::Read,
+    T: de::Deserialize<'de>,
+{
+    let mut deserializer = Deserializer::new(reader, length);
+    let value = T::deserialize(&mut deserializer)?;
+    if !deserializer.is_fully_read() {
+        bail!(ErrorKind::Underflow);
+    }
+    Ok(value)
+}
+
 /// Deserialize an instance of type `T` from bytes of ROSMSG data.
 ///
 /// This conversion can fail if the passed stream of bytes does not match the
@@ -582,6 +597,16 @@ where
     from_reader(io::Cursor::new(bytes))
 }
 
+/// Variant of [from_slice] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_slice_known_length<'de, T>(bytes: &[u8], length: u32) -> Result<T>
+where
+    T: de::Deserialize<'de>,
+{
+    from_reader_known_length(io::Cursor::new(bytes), length)
+}
+
+
 /// Deserialize an instance of type `T` from a string of ROSMSG data.
 ///
 /// This conversion can fail if the passed stream of bytes does not match the
@@ -603,6 +628,15 @@ where
     T: de::Deserialize<'de>,
 {
     from_slice(value.as_bytes())
+}
+
+/// Variant of [from_str] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_str_known_length<'de, T>(value: &str, length: u32) -> Result<T>
+where
+    T: de::Deserialize<'de>,
+{
+    from_slice_known_length(value.as_bytes(), length)
 }
 
 #[cfg(test)]

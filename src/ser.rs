@@ -445,6 +445,16 @@ where
         .map_err(|v| v.into())
 }
 
+/// Variant of [to_writer] where the 4 bytes for the overall message length are skipped
+/// and the overall length is determined by some other means.
+pub fn to_writer_skip_length<W, T>(writer: &mut W, value: &T) -> Result<()>
+where
+    W: io::Write,
+    T: ser::Serialize,
+{
+    value.serialize(&mut Serializer::new(writer))
+}
+
 /// Serialize the given data structure `T` as a ROSMSG byte vector.
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
@@ -463,6 +473,17 @@ where
 {
     let mut writer = Vec::with_capacity(128);
     to_writer(&mut writer, value)?;
+    Ok(writer)
+}
+
+/// Variant of [to_vec] where the 4 bytes for the overall message length are skipped
+/// and the overall length is determined by some other means.
+pub fn to_vec_skip_length<T>(value: &T) -> Result<Vec<u8>>
+where
+    T: ser::Serialize,
+{
+    let mut writer = Vec::with_capacity(128);
+    to_writer_skip_length(&mut writer, value)?;
     Ok(writer)
 }
 
