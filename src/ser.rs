@@ -9,6 +9,7 @@
 
 use super::error::{Error, ErrorKind, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
+use error_chain::bail;
 use serde::ser::{self, Impossible};
 use std::io;
 
@@ -31,8 +32,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::ser::Serializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::ser::Serializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::ser::Serialize;
@@ -53,8 +54,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::ser::Serializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::ser::Serializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::ser::Serialize;
@@ -425,7 +426,7 @@ impl ser::Error for Error {
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::ser::to_writer;
+/// # use roslibrust_serde_rosmsg::ser::to_writer;
 /// # use std;
 /// let mut cursor = std::io::Cursor::new(Vec::new());
 /// to_writer(&mut cursor, &String::from("Hello, World!")).unwrap();
@@ -444,6 +445,16 @@ where
         .map_err(|v| v.into())
 }
 
+/// Variant of [to_writer] where the 4 bytes for the overall message length are skipped
+/// and the overall length is determined by some other means.
+pub fn to_writer_skip_length<W, T>(writer: &mut W, value: &T) -> Result<()>
+where
+    W: io::Write,
+    T: ser::Serialize,
+{
+    value.serialize(&mut Serializer::new(writer))
+}
+
 /// Serialize the given data structure `T` as a ROSMSG byte vector.
 ///
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
@@ -452,7 +463,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::ser::to_vec;
+/// # use roslibrust_serde_rosmsg::ser::to_vec;
 /// let data = to_vec(&String::from("Hello, World!")).unwrap();
 /// assert_eq!(data, b"\x11\0\0\0\x0d\0\0\0Hello, World!");
 /// ```
@@ -465,9 +476,21 @@ where
     Ok(writer)
 }
 
+/// Variant of [to_vec] where the 4 bytes for the overall message length are skipped
+/// and the overall length is determined by some other means.
+pub fn to_vec_skip_length<T>(value: &T) -> Result<Vec<u8>>
+where
+    T: ser::Serialize,
+{
+    let mut writer = Vec::with_capacity(128);
+    to_writer_skip_length(&mut writer, value)?;
+    Ok(writer)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Serialize;
     use std::collections::HashMap;
 
     #[test]
@@ -605,6 +628,24 @@ mod tests {
                 22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1
             ],
             to_vec(&v).unwrap()
+        );
+    }
+
+    #[test]
+    fn writes_simple_struct_no_length() {
+        let v = TestStructOne {
+            a: 2050i16,
+            b: true,
+            c: 7u8,
+            d: String::from("ABC012"),
+            e: vec![true, false, false, true],
+        };
+        assert_eq!(
+            vec![
+                //22, 0, 0, 0,
+                2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1
+            ],
+            to_vec_skip_length(&v).unwrap()
         );
     }
 

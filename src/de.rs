@@ -12,6 +12,7 @@
 
 use super::error::{Error, ErrorKind, Result, ResultExt};
 use byteorder::{LittleEndian, ReadBytesExt};
+use error_chain::*;
 use serde::de;
 use std::io;
 
@@ -38,8 +39,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -64,8 +65,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -91,8 +92,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -526,7 +527,7 @@ impl de::Error for Error {
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_reader;
+/// # use roslibrust_serde_rosmsg::de::from_reader;
 /// # use std;
 /// let data = [
 ///     17, 0, 0, 0,
@@ -555,6 +556,21 @@ where
     Ok(value)
 }
 
+/// Variant of [from_reader] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_reader_known_length<'de, R, T>(reader: R, length: u32) -> Result<T>
+where
+    R: io::Read,
+    T: de::Deserialize<'de>,
+{
+    let mut deserializer = Deserializer::new(reader, length);
+    let value = T::deserialize(&mut deserializer)?;
+    if !deserializer.is_fully_read() {
+        bail!(ErrorKind::Underflow);
+    }
+    Ok(value)
+}
+
 /// Deserialize an instance of type `T` from bytes of ROSMSG data.
 ///
 /// This conversion can fail if the passed stream of bytes does not match the
@@ -564,7 +580,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_slice;
+/// # use roslibrust_serde_rosmsg::de::from_slice;
 /// let value: String = from_slice(&[
 ///     17, 0, 0, 0,
 ///     13, 0, 0, 0,
@@ -581,6 +597,15 @@ where
     from_reader(io::Cursor::new(bytes))
 }
 
+/// Variant of [from_slice] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_slice_known_length<'de, T>(bytes: &[u8], length: u32) -> Result<T>
+where
+    T: de::Deserialize<'de>,
+{
+    from_reader_known_length(io::Cursor::new(bytes), length)
+}
+
 /// Deserialize an instance of type `T` from a string of ROSMSG data.
 ///
 /// This conversion can fail if the passed stream of bytes does not match the
@@ -590,7 +615,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_str;
+/// # use roslibrust_serde_rosmsg::de::from_str;
 /// let value: String = from_str("\x11\0\0\0\x0d\0\0\0Hello, World!").unwrap();
 /// assert_eq!(value, "Hello, World!");
 ///
@@ -604,83 +629,93 @@ where
     from_slice(value.as_bytes())
 }
 
+/// Variant of [from_str] where the 4 bytes for the overall message length
+/// isn't present and the overall length is determined by some other means.
+pub fn from_str_known_length<'de, T>(value: &str, length: u32) -> Result<T>
+where
+    T: de::Deserialize<'de>,
+{
+    from_slice_known_length(value.as_bytes(), length)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Deserialize;
     use std;
 
     #[test]
     fn reads_u8() {
         let data = vec![1, 0, 0, 0, 150];
-        assert_eq!(150u8, from_slice(&data).unwrap());
+        assert_eq!(150u8, from_slice::<u8>(&data).unwrap());
     }
 
     #[test]
     fn reads_u16() {
         let data = vec![2, 0, 0, 0, 0x34, 0xA2];
-        assert_eq!(0xA234u16, from_slice(&data).unwrap());
+        assert_eq!(0xA234u16, from_slice::<u16>(&data).unwrap());
     }
 
     #[test]
     fn reads_u32() {
         let data = vec![4, 0, 0, 0, 0x45, 0x23, 1, 0xCD];
-        assert_eq!(0xCD012345u32, from_slice(&data).unwrap());
+        assert_eq!(0xCD012345u32, from_slice::<u32>(&data).unwrap());
     }
 
     #[test]
     fn reads_u64() {
         let data = vec![8, 0, 0, 0, 0xBB, 0xAA, 0x10, 0x32, 0x54, 0x76, 0x98, 0xAB];
-        assert_eq!(0xAB9876543210AABBu64, from_slice(&data).unwrap());
+        assert_eq!(0xAB9876543210AABBu64, from_slice::<u64>(&data).unwrap());
     }
 
     #[test]
     fn reads_i8() {
         let data = vec![1, 0, 0, 0, 156];
-        assert_eq!(-100i8, from_slice(&data).unwrap());
+        assert_eq!(-100i8, from_slice::<i8>(&data).unwrap());
     }
 
     #[test]
     fn reads_i16() {
         let data = vec![2, 0, 0, 0, 0xD0, 0x8A];
-        assert_eq!(-30000i16, from_slice(&data).unwrap());
+        assert_eq!(-30000i16, from_slice::<i16>(&data).unwrap());
     }
 
     #[test]
     fn reads_i32() {
         let data = vec![4, 0, 0, 0, 0x00, 0x6C, 0xCA, 0x88];
-        assert_eq!(-2000000000i32, from_slice(&data).unwrap());
+        assert_eq!(-2000000000i32, from_slice::<i32>(&data).unwrap());
     }
 
     #[test]
     fn reads_i64() {
         let data = vec![8, 0, 0, 0, 0x00, 0x00, 0x7c, 0x1d, 0xaf, 0x93, 0x19, 0x83];
-        assert_eq!(-9000000000000000000i64, from_slice(&data).unwrap());
+        assert_eq!(-9000000000000000000i64, from_slice::<i64>(&data).unwrap());
     }
 
     #[test]
     fn reads_f32() {
         let data = vec![4, 0, 0, 0, 0x00, 0x70, 0x7b, 0x44];
-        assert_eq!(1005.75f32, from_slice(&data).unwrap());
+        assert_eq!(1005.75f32, from_slice::<f32>(&data).unwrap());
     }
 
     #[test]
     fn reads_f64() {
         let data = vec![8, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0x8f, 0x40];
-        assert_eq!(1005.75f64, from_slice(&data).unwrap());
+        assert_eq!(1005.75f64, from_slice::<f64>(&data).unwrap());
     }
 
     #[test]
     fn reads_bool() {
         let data = vec![1, 0, 0, 0, 1];
-        assert_eq!(true, from_slice(&data).unwrap());
+        assert_eq!(true, from_slice::<bool>(&data).unwrap());
         let data = vec![1, 0, 0, 0, 0];
-        assert_eq!(false, from_slice(&data).unwrap());
+        assert_eq!(false, from_slice::<bool>(&data).unwrap());
     }
 
     #[test]
     fn reads_bool_from_string() {
-        assert_eq!(true, from_str("\x01\0\0\0\x01").unwrap());
-        assert_eq!(false, from_str("\x01\0\0\0\x00").unwrap());
+        assert_eq!(true, from_str::<bool>("\x01\0\0\0\x01").unwrap());
+        assert_eq!(false, from_str::<bool>("\x01\0\0\0\x00").unwrap());
     }
 
     #[test]
@@ -766,6 +801,25 @@ mod tests {
             22, 0, 0, 0, 2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1,
         ];
         assert_eq!(v, from_slice(&data).unwrap());
+    }
+
+    #[test]
+    fn reads_simple_struct_no_length() {
+        let v = TestStructOne {
+            a: 2050i16,
+            b: true,
+            c: 7u8,
+            d: String::from("ABC012"),
+            e: vec![true, false, false, true],
+        };
+        let data = vec![
+            //22, 0, 0, 0,
+            2, 8, 1, 7, 6, 0, 0, 0, 65, 66, 67, 48, 49, 50, 4, 0, 0, 0, 1, 0, 0, 1,
+        ];
+        assert_eq!(
+            v,
+            from_slice_known_length(&data, data.len() as u32).unwrap()
+        );
     }
 
     #[derive(Debug, Deserialize, PartialEq)]

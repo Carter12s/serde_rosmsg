@@ -1,8 +1,8 @@
 // TODO unclear why we need these extern crates here?
 extern crate criterion;
 extern crate pprof;
+extern crate roslibrust_serde_rosmsg;
 extern crate serde;
-extern crate serde_rosmsg;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
@@ -94,32 +94,32 @@ pub struct SharedImage {
 
 #[inline]
 fn parse_vec_image() {
-    let image: VecImage = serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+    let image: VecImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
     black_box(image);
 }
 
 #[inline]
 fn parse_vec_bytes_image() {
-    let image: VecBytesImage = serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+    let image: VecBytesImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
     black_box(image);
 }
 
 #[inline]
 fn parse_shared_image() {
-    let image: SharedImage = serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+    let image: SharedImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
     black_box(image);
 }
 
 // Not supported yet
 // #[inline]
 // fn parse_ref_image() {
-//     let image: RefImage = serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+//     let image: RefImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
 //     black_box(image);
 // }
 
 // #[inline]
 // fn parse_ref_bytes_image() {
-//     let image: RefBytesImage = serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+//     let image: RefBytesImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
 //     black_box(image);
 // }
 

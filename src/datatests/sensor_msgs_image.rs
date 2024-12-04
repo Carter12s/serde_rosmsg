@@ -2,7 +2,8 @@
 
 #[cfg(test)]
 mod tests {
-    use from_slice;
+    use crate::from_slice;
+    use serde::{Deserialize, Serialize};
 
     #[derive(Deserialize, Serialize, PartialEq, Debug)]
     pub struct Image {

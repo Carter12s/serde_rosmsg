@@ -2,7 +2,8 @@
 
 #[cfg(test)]
 mod tests {
-    use from_slice;
+    use crate::from_slice;
+    use serde::Deserialize;
     use std::collections::HashMap;
 
     #[derive(Debug, Deserialize, PartialEq)]
