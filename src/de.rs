@@ -12,6 +12,7 @@
 
 use super::error::{Error, ErrorKind, Result, ResultExt};
 use byteorder::{LittleEndian, ReadBytesExt};
+use error_chain::*;
 use serde::de;
 use std::io;
 
@@ -607,80 +608,81 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Deserialize;
     use std;
 
     #[test]
     fn reads_u8() {
         let data = vec![1, 0, 0, 0, 150];
-        assert_eq!(150u8, from_slice(&data).unwrap());
+        assert_eq!(150u8, from_slice::<u8>(&data).unwrap());
     }
 
     #[test]
     fn reads_u16() {
         let data = vec![2, 0, 0, 0, 0x34, 0xA2];
-        assert_eq!(0xA234u16, from_slice(&data).unwrap());
+        assert_eq!(0xA234u16, from_slice::<u16>(&data).unwrap());
     }
 
     #[test]
     fn reads_u32() {
         let data = vec![4, 0, 0, 0, 0x45, 0x23, 1, 0xCD];
-        assert_eq!(0xCD012345u32, from_slice(&data).unwrap());
+        assert_eq!(0xCD012345u32, from_slice::<u32>(&data).unwrap());
     }
 
     #[test]
     fn reads_u64() {
         let data = vec![8, 0, 0, 0, 0xBB, 0xAA, 0x10, 0x32, 0x54, 0x76, 0x98, 0xAB];
-        assert_eq!(0xAB9876543210AABBu64, from_slice(&data).unwrap());
+        assert_eq!(0xAB9876543210AABBu64, from_slice::<u64>(&data).unwrap());
     }
 
     #[test]
     fn reads_i8() {
         let data = vec![1, 0, 0, 0, 156];
-        assert_eq!(-100i8, from_slice(&data).unwrap());
+        assert_eq!(-100i8, from_slice::<i8>(&data).unwrap());
     }
 
     #[test]
     fn reads_i16() {
         let data = vec![2, 0, 0, 0, 0xD0, 0x8A];
-        assert_eq!(-30000i16, from_slice(&data).unwrap());
+        assert_eq!(-30000i16, from_slice::<i16>(&data).unwrap());
     }
 
     #[test]
     fn reads_i32() {
         let data = vec![4, 0, 0, 0, 0x00, 0x6C, 0xCA, 0x88];
-        assert_eq!(-2000000000i32, from_slice(&data).unwrap());
+        assert_eq!(-2000000000i32, from_slice::<i32>(&data).unwrap());
     }
 
     #[test]
     fn reads_i64() {
         let data = vec![8, 0, 0, 0, 0x00, 0x00, 0x7c, 0x1d, 0xaf, 0x93, 0x19, 0x83];
-        assert_eq!(-9000000000000000000i64, from_slice(&data).unwrap());
+        assert_eq!(-9000000000000000000i64, from_slice::<i64>(&data).unwrap());
     }
 
     #[test]
     fn reads_f32() {
         let data = vec![4, 0, 0, 0, 0x00, 0x70, 0x7b, 0x44];
-        assert_eq!(1005.75f32, from_slice(&data).unwrap());
+        assert_eq!(1005.75f32, from_slice::<f32>(&data).unwrap());
     }
 
     #[test]
     fn reads_f64() {
         let data = vec![8, 0, 0, 0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0x8f, 0x40];
-        assert_eq!(1005.75f64, from_slice(&data).unwrap());
+        assert_eq!(1005.75f64, from_slice::<f64>(&data).unwrap());
     }
 
     #[test]
     fn reads_bool() {
         let data = vec![1, 0, 0, 0, 1];
-        assert_eq!(true, from_slice(&data).unwrap());
+        assert_eq!(true, from_slice::<bool>(&data).unwrap());
         let data = vec![1, 0, 0, 0, 0];
-        assert_eq!(false, from_slice(&data).unwrap());
+        assert_eq!(false, from_slice::<bool>(&data).unwrap());
     }
 
     #[test]
     fn reads_bool_from_string() {
-        assert_eq!(true, from_str("\x01\0\0\0\x01").unwrap());
-        assert_eq!(false, from_str("\x01\0\0\0\x00").unwrap());
+        assert_eq!(true, from_str::<bool>("\x01\0\0\0\x01").unwrap());
+        assert_eq!(false, from_str::<bool>("\x01\0\0\0\x00").unwrap());
     }
 
     #[test]

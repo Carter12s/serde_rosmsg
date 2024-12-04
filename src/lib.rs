@@ -34,10 +34,8 @@
 //! [`serde_derive`](https://crates.io/crates/serde_derive)
 //!
 //! ```rust
-//! extern crate roslibrust_serde_rosmsg;
-//! #[macro_use]
-//! extern crate serde_derive;
 //! use roslibrust_serde_rosmsg::{to_vec, from_slice};
+//! use serde::{Serialize, Deserialize};
 //!
 //! fn main() {
 //! #[derive(Debug,Serialize,Deserialize,PartialEq)]
@@ -61,13 +59,6 @@
 //! ```
 
 #![recursion_limit = "1024"]
-
-extern crate byteorder;
-#[macro_use]
-extern crate error_chain;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
 
 #[doc(inline)]
 pub use self::de::*;

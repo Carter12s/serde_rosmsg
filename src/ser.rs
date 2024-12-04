@@ -9,6 +9,7 @@
 
 use super::error::{Error, ErrorKind, Result};
 use byteorder::{LittleEndian, WriteBytesExt};
+use error_chain::bail;
 use serde::ser::{self, Impossible};
 use std::io;
 
@@ -468,6 +469,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde::Serialize;
     use std::collections::HashMap;
 
     #[test]
