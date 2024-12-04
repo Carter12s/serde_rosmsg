@@ -31,8 +31,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::ser::Serializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::ser::Serializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::ser::Serialize;
@@ -53,8 +53,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::ser::Serializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::ser::Serializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::ser::Serialize;
@@ -425,7 +425,7 @@ impl ser::Error for Error {
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::ser::to_writer;
+/// # use roslibrust_serde_rosmsg::ser::to_writer;
 /// # use std;
 /// let mut cursor = std::io::Cursor::new(Vec::new());
 /// to_writer(&mut cursor, &String::from("Hello, World!")).unwrap();
@@ -452,7 +452,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::ser::to_vec;
+/// # use roslibrust_serde_rosmsg::ser::to_vec;
 /// let data = to_vec(&String::from("Hello, World!")).unwrap();
 /// assert_eq!(data, b"\x11\0\0\0\x0d\0\0\0Hello, World!");
 /// ```

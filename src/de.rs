@@ -38,8 +38,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -64,8 +64,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -91,8 +91,8 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate serde_rosmsg;
-    /// # use serde_rosmsg::de::Deserializer;
+    /// # extern crate roslibrust_serde_rosmsg;
+    /// # use roslibrust_serde_rosmsg::de::Deserializer;
     /// # extern crate serde;
     /// # fn main() {
     /// use serde::de::Deserialize;
@@ -526,7 +526,7 @@ impl de::Error for Error {
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_reader;
+/// # use roslibrust_serde_rosmsg::de::from_reader;
 /// # use std;
 /// let data = [
 ///     17, 0, 0, 0,
@@ -564,7 +564,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_slice;
+/// # use roslibrust_serde_rosmsg::de::from_slice;
 /// let value: String = from_slice(&[
 ///     17, 0, 0, 0,
 ///     13, 0, 0, 0,
@@ -590,7 +590,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # use serde_rosmsg::de::from_str;
+/// # use roslibrust_serde_rosmsg::de::from_str;
 /// let value: String = from_str("\x11\0\0\0\x0d\0\0\0Hello, World!").unwrap();
 /// assert_eq!(value, "Hello, World!");
 ///
