@@ -471,9 +471,21 @@ pub fn to_vec<T>(value: &T) -> Result<Vec<u8>>
 where
     T: ser::Serialize,
 {
-    let mut writer = Vec::with_capacity(128);
-    to_writer(&mut writer, value)?;
-    Ok(writer)
+    // Note we don't know the length until we've serialized
+    let mut buffer = Vec::with_capacity(128);
+    let mut cursor = io::Cursor::new(&mut buffer);
+    // Skip the first 4 bytes so we have somewhere to write length
+    cursor.set_position(4);
+    // Serialize the value to the back of the Vec
+    value.serialize(&mut Serializer::new(&mut cursor))?;
+    // Note: we need to subtract 4 from the length due to the skipped 4 bytes
+    // But we also want and empty message to not have a negative length
+    // Therefore we use saturating_sub
+    let length = (cursor.get_ref().len().saturating_sub(4)) as u32;
+    // Reset cursor to the start of the Vec and write the length there
+    cursor.set_position(0);
+    cursor.write_u32::<LittleEndian>(length)?;
+    Ok(buffer)
 }
 
 /// Variant of [to_vec] where the 4 bytes for the overall message length are skipped
