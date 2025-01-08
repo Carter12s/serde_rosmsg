@@ -110,34 +110,27 @@ fn parse_shared_image() {
     black_box(image);
 }
 
-// Not supported yet
-// #[inline]
-// fn parse_ref_image() {
-//     let image: RefImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
-//     black_box(image);
-// }
-
-// #[inline]
-// fn parse_ref_bytes_image() {
-//     let image: RefBytesImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
-//     black_box(image);
-// }
+#[inline]
+fn serialize_vec_bytes_image(image: &VecBytesImage) {
+    black_box(roslibrust_serde_rosmsg::to_vec(image).unwrap());
+}
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("parse_vec_image", |b| b.iter(|| parse_vec_image()));
     c.bench_function("parse_vec_bytes_image", |b| {
         b.iter(|| parse_vec_bytes_image())
     });
-    // c.bench_function("parse_ref_image", |b| b.iter(|| parse_ref_image()));
-    // c.bench_function("parse_ref_bytes_image", |b| {
-    //     b.iter(|| parse_ref_bytes_image())
-    // });
     c.bench_function("parse_shared_image", |b| b.iter(|| parse_shared_image()));
+
+    let image: VecBytesImage = roslibrust_serde_rosmsg::from_slice(IMAGE_DATA).unwrap();
+    c.bench_function("serialize_vec_bytes_image", |b| {
+        b.iter(|| serialize_vec_bytes_image(&image))
+    });
 }
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+    config = Criterion::default().with_profiler(PProfProfiler::new(1000, Output::Flamegraph(None)));
     targets = criterion_benchmark
 );
 criterion_main!(benches);
